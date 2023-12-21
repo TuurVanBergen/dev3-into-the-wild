@@ -12,7 +12,3 @@ data class Mushroom(
     val habitat: String,
     var statistics: Int = 0
 )
-
-
-
-

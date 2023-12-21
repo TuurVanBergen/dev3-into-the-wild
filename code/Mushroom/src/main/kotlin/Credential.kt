@@ -4,6 +4,3 @@ data class Credential (
     val databaseName:String = "2324DEV3063",
     val host: String ="dt5.ehb.be"
 )
-
-
-
