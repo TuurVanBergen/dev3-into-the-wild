@@ -2,18 +2,13 @@ import java.util.*
 import java.sql.*
 
 val mushrooms : MutableSet<Mushroom> = mutableSetOf()
-
-
-
-
-
-
 fun main() {
+    //make the mushrooms array empty
     mushrooms.clear()
     Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance()
+
     // Prepare credentials
     val credentials = Credential()
-    //println(credentials)
 
     // Prepare credentials
     val connectionProps = Properties()
@@ -29,8 +24,12 @@ fun main() {
         connectionProps)
 
     //sql query creation which is then put into the variable 'statement'.
+    //The m. refers to the mushrooms table, as I gave it an alias m with "mushrooms m". The same applies to c. (colors) & cm. (color_mushrooms) & .gp (growth_period) & .h (habitat) & .gpm (growth_periods_mushrooms)
+    //GROUP_CONCAT(c.color) groups the colors for every mushroom. https://www.geeksforgeeks.org/mysql-group_concat-function/
+    //MAX() retrieves the highest value
+
     val statement = connection.prepareStatement("SELECT m.id, m.name, m.hat_shape, m.spore_patern, m.odor, m.toxicity_level, m.size, m.stem_shape, m.lamellae_presence, m.statistic, GROUP_CONCAT(c.color) AS colors, MAX(gp.growth_period) AS growth_period, MAX(h.habitat) AS habitat FROM mushrooms m JOIN color_mushrooms cm ON m.id = cm.id_mushroom JOIN colors c ON cm.Id_color = c.id_color JOIN growth_periods_mushrooms gpm ON m.id = gpm.id_mushroom JOIN growth_periods gp ON gpm.id_growth_period = gp.id JOIN habitats h ON m.habitat_id = h.id GROUP BY m.id, m.name, m.hat_shape, m.spore_patern, m.odor, m.toxicity_level, m.size, m.stem_shape, m.lamellae_presence, m.habitat_id, m.statistic;")
-    println(statement)
+
     // the statement is going to be executed and put into the variable 'result'.
     val result = statement.executeQuery()
 
@@ -41,22 +40,23 @@ fun main() {
     }
 
     // After all this is done, the 'filterResults' function is called.
+    //The connection is passed through, so that there can be another connection
     filterResults(connection)
 }
 fun filterResults(connection : Connection) {
 
     //There is an array 'Questions' created, in which I put all the questions needed to identify the mushroom.
     val questions = setOf(
-        "How big is the mushroom?",
-        "What shape is the cap of the mushroom?",
-        "What pattern do the spores have?",
-        "What smell does the mushroom have?",
-        "How poisonous is the mushroom?",
-        "What shape does the stem have?",
-        "Is there a lamellaa present?",
-        "What is(are) the color(s)?",
-        "What is the growth_period?",
-        "What is the habitat?"
+        "How big is the mushroom? Small, Medium or Large",
+        "What shape is the hat of the mushroom? Spherical, Bell-shaped, Funnel-shaped, Cylindrical, Conical, Oblong, Flat, Cone-shaped, Convex, Roundish",
+        "What pattern do the spores have? Lamellae or No Lamellae",
+        "What odor does the mushroom have? Unremarkable, Earthy, Mild, Fruity, Floury, Fragrant, Sulfur, Unremarkable, pleasant, Sour, Weak, Musty, Anise, Stinky",
+        "How poisonous is the mushroom? Toxic, Edible, Hallucinogenic, Non Toxic",
+        "What shape does the stem have? Cylindrical, Slim, Short, Long, Solid",
+        "Is there a lamellaa present? Present or Absent",
+        "What is(are) the color(s)? Red, White, Brown, Orange, Yellow",
+        "What is the growth_period? Summer, Winter, Spring, Autumn",
+        "What is the habitat? Grassland, Mixed forests, Deciduous forests"
     )
 
     //as long as there is a next question in the questions array this loop is executed.
@@ -65,7 +65,6 @@ fun filterResults(connection : Connection) {
         //Print the question in the terminal.
         println(question)
         val userAnswer = readln()
-
         //The removeIf function and its syntax I found on the website below
         //https://www.geeksforgeeks.org/arraylist-removeif-method-in-java/
         //It's going to loop over the different elements of the mushrooms array.
@@ -74,18 +73,18 @@ fun filterResults(connection : Connection) {
         //If not, then it wil return 'true' and the mushroom will be deleted in 'mushrooms'.
         //if it is false, then it will not be deleted
         //Else, nothing will be deleted.
-        mushrooms.removeIf { Mushroom ->
+        mushrooms.removeIf { mushroom ->
             when (question) {
-                "How big is the mushroom?" -> Mushroom.size != userAnswer
-                "What shape is the cap of the mushroom?" -> Mushroom.hatShape != userAnswer
-                "What pattern do the spores have?" -> Mushroom.sporePatern != userAnswer
-                "What smell does the mushroom have?" -> Mushroom.odor != userAnswer
-                "How poisonous is the mushroom?" -> Mushroom.toxicityLevel != userAnswer
-                "What shape does the stem have?" -> Mushroom.stemShape != userAnswer
-                "Is there a lamellaa present?" -> Mushroom.lamellaePresence != userAnswer
-                "What is(are) the color(s)?",-> !Mushroom.colors.contains(userAnswer)
-                "What is the growth_period?",-> Mushroom.growth_period != userAnswer
-                "What is the habitat?"-> Mushroom.habitat != userAnswer
+                "How big is the mushroom? Small, Medium or Large" -> mushroom.size != userAnswer
+                "What shape is the hat of the mushroom? Spherical, Bell-shaped, Funnel-shaped, Cylindrical, Conical, Oblong, Flat, Cone-shaped, Convex, Roundish" -> mushroom.hatShape != userAnswer
+                "What pattern do the spores have? Lamellae or No Lamellae" -> mushroom.sporePatern != userAnswer
+                "What odor does the mushroom have? Unremarkable, Earthy, Mild, Fruity, Floury, Fragrant, Sulfur, Unremarkable, pleasant, Sour, Weak, Musty, Anise, Stinky" -> mushroom.odor != userAnswer
+                "How poisonous is the mushroom? Toxic, Edible, Hallucinogenic, Non Toxic" -> mushroom.toxicityLevel != userAnswer
+                "What shape does the stem have? Cylindrical, Slim, Short, Long, Solid", -> mushroom.stemShape != userAnswer
+                "Is there a lamellaa present? Present or Absent" -> mushroom.lamellaePresence != userAnswer
+                "What is(are) the color(s)? Red, White, Brown, Orange, Yellow",-> !mushroom.colors.contains(userAnswer)
+                "What is the growth_period? Summer, Winter, Spring, Autumn",-> mushroom.growth_period != userAnswer
+                "What is the habitat? Grassland, Mixed forests, Deciduous forests"-> mushroom.habitat != userAnswer
                 else -> false
             }
         }
@@ -96,67 +95,129 @@ fun filterResults(connection : Connection) {
             println(mushroom)
         }
 
-        // if there is and all the questions are asked, then the mushroom is identified.
+        // if there is only 1 mushroom left and all the questions are asked, then the mushroom is identified.
         if (mushrooms.size == 1 && questions.indexOf(question) == questions.size -1) {
 
             //The identified mushroom will be placed in 'identifiedMushroom'.
             val identifiedMushroom = mushrooms.first()
-            // Verhoog de statistieken en sla deze op in de database
+            //Increase statistics and save it to the database.
             identifiedMushroom.statistics += 1
             updateStatisticsInDatabase(connection, identifiedMushroom.name, identifiedMushroom.statistics)
 
             println("The mushroom is identified, it is the ${identifiedMushroom.name}")
+
+            //Give the user the option to reset the statistics
             println("Would you like to reset the statistics? 'y'/'n'")
-            var answer = readln()
-            if(answer == "y"){
-                resetStatistics(connection)
-            }
-            println("Would you like to add a mushroom?")
-            answer = readln()
-            if(answer == "y"){
-                addMushroom(connection)
+            var validInput = false;
+            while(!validInput){
+                var answer = readln()
+                when(answer){
+                    "y"->{
+                        resetStatistics(connection)
+                        validInput = true
+                    }
+                    "n"->{
+                        validInput = true
+                    }else->{
+                    println("Invalid input. Please enter 'y' or 'n'.")
+                    }
+                }
             }
 
-            println("Would you like to identify a mushroom again ? 'y'/'n'")
+            validInput = false
+            println("Would you like to add a mushroom?")
+            while(!validInput){
+                var answer = readln()
+                when(answer){
+                    "y"->{
+                        addMushroom(connection)
+                        validInput = true
+                    }
+                    "n"->{
+                        validInput = true
+                    }else->{
+                    println("Invalid input. Please enter 'y' or 'n'.")
+                }
+                }
+            }
+
+            validInput = false
             //Read the user input and store it in "answer"
-            answer = readln()
-            if (answer =="y"){
-                println("The application restarts...")
-                main()
-            } else if(answer =="n"){
-                println("The application stops...")
-                //stop the app
-                return
+            println("Would you like to identify a mushroom again ? 'y'/'n'")
+            while(!validInput){
+                var answer = readln()
+                when(answer){
+                    "y"->{
+                        println("The application restarts...")
+                        main()
+                        validInput = true
+                    }
+                    "n"->{
+                        println("The application stops...")
+                        //stop the app
+                        validInput = true
+                        return
+                    }else->{
+                    println("Invalid input. Please enter 'y' or 'n'.")
+                }
+                }
             }
 
         } else if (mushrooms.size == 0) {
             println("There are no remaining mushrooms to identify.")
-            println("Would you like to add a mushroom? 'y'/'n'")
 
-            var answer = readln()
-            if(answer == "y"){
-                addMushroom(connection)
+           var validInput = false
+            //Read the user input and store it in "answer"
+            println("Would you like to add a mushroom? 'y'/'n'")
+            while(!validInput){
+                var answer = readln()
+                when(answer){
+                    "y"->{
+                        addMushroom(connection)
+                        validInput = true
+                    }
+                    "n"->{
+                        validInput = true
+                    }else->{
+                    println("Invalid input. Please enter 'y' or 'n'.")
+                }
+                }
             }
 
+             validInput = false
+            //Read the user input and store it in "answer"
             println("Would you like to identify a mushroom again ? 'y'/'n'")
-            if (answer =="y"){
-                println("The application restarts...")
-                main()
-
-            }else if(answer =="n"){
-                println("The application stops...")
-                //stop the app
-                return
+            while(!validInput){
+                var  answer = readln()
+                when(answer){
+                    "y"->{
+                        println("The application restarts...")
+                        main()
+                        validInput = true
+                    }
+                    "n"->{
+                        validInput = true
+                        println("The application stops...")
+                        //stop the app
+                        return
+                    }else->{
+                    println("Invalid input. Please enter 'y' or 'n'.")
+                }
+                }
             }
         }
     }
 }
 
 fun updateStatisticsInDatabase(connection: Connection, mushroomName: String, newStatistic: Int) {
+    //On this website i found the createStatement() and executeUpdate().
+    //https://www.enterprisedb.com/docs/jdbc_connector/latest/06_executing_sql_commands_with_executeUpdate()/#:~:text=createStatement())%20%7B-,The%20executeUpdate()%20method%20returns%20the%20number%20of%20rows%20affected,int%20rowcount%20%3D%20stmt.
     val updateStatement = connection.createStatement()
     val sql = "UPDATE mushrooms SET statistic = $newStatistic WHERE name = '$mushroomName'"
     println(sql)
     updateStatement.executeUpdate(sql)
+
+    //show the current statistics of the mushroom
     showStatistic(newStatistic, mushroomName)
 }
 
@@ -165,6 +226,8 @@ fun showStatistic(statistic: Int, mushroomName: String){
 }
 
 fun resetStatistics(connection: Connection){
+    //On this website I found the createStatement() and executeUpdate().
+    //https://www.enterprisedb.com/docs/jdbc_connector/latest/06_executing_sql_commands_with_executeUpdate()/#:~:text=createStatement())%20%7B-,The%20executeUpdate()%20method%20returns%20the%20number%20of%20rows%20affected,int%20rowcount%20%3D%20stmt.
     val updateStatement = connection.createStatement()
     val sql = "UPDATE mushrooms SET statistic = 0"
     updateStatement.executeUpdate(sql)
@@ -174,23 +237,59 @@ fun resetStatistics(connection: Connection){
 fun addMushroom(connection: Connection){
     val sqlList = mutableListOf<String>()
 
+    var validInput = false
+    println("Do you want to add habitat, or reuse it? add/reuse")
+    while(!validInput){
+        var answer = readln()
+        when(answer){
+            "add"->{
+                println("Enter the habitat")
+                answer = readln()
+                sqlList.add("INSERT INTO `habitats` (`id`, `habitat`) VALUES (NULL, '${answer}')")
+                validInput = true
+            }
+            "reuse"->{
+                println("You can choose from these habitats: Coniferous forests, Mixed forests, Grassland, Deciduous forests")
+                var input = false
+                while(!input){
+                    var userAnswer = readln()
+                    when(userAnswer){
+                        "Coniferous forests"->{
+                     //       answer = "1"
+                     //       sqlList.add("INSERT INTO `habitats` (`id`, `habitat`) VALUES (NULL, '${answer}')")
+                            input = true
+                        }
+                        "Mixed forests"->{
 
+                            input = true
+                        }
+                        "Grassland"->{
 
-    println("wil je een habitat toevoegen, of hergebruiken? y/n")
-    var useranswer = readln()
+                            input = true
+                        }
+                        "Deciduous forests"->{
 
-    if(useranswer =="y"){
-        println("Geef je habitat in")
-        useranswer = readln()
-        sqlList.add("INSERT INTO `habitats` (`id`, `habitat`) VALUES (NULL, '${useranswer}')")
+                            input = true
+                        }
+                        else->{
+                            println("Try again! You have made a typo.")
+                        }
+                    }
+                }
+                validInput = true
+            }else->{
+            println("Invalid input. Please enter 'add' or 'reuse'.")
+        }
+        }
+    }
+
         val answerList = mutableListOf<String>()
-
         // Add elements to the list
         println("What is the name of the mushroom?")
         answerList.add(readln())
         println("How big is the mushroom?")
         answerList.add(readln())
-        println("What shape is the cap of the mushroom?")
+        println("What shape is the hat of the mushroom?")
         answerList.add(readln())
         println("What pattern do the spores have?")
         answerList.add(readln())
@@ -207,76 +306,90 @@ fun addMushroom(connection: Connection){
             "INSERT INTO `mushrooms` (`id`, `name`, `hat_shape`, `spore_patern`, `odor`, `toxicity_level`, `size`, `stem_shape`, `lamellae_presence`, `habitat_id`, `statistic`) VALUES (NULL, '${answerList[0]}', '${answerList[1]}', '${answerList[2]}', '${answerList[3]}', '${answerList[4]}', '${answerList[5]}', '${answerList[6]}', '${answerList[7]}', (SELECT MAX(id) FROM habitats), '0')"
         sqlList.add(prompt)
 
-    }else if(useranswer =="n"){
-        println("Kies uit de gebruikte habitats, .....")
-        useranswer = readln()
-        var userHabitat = ""
-        when (useranswer) {
-            "Coniferous forests" -> userHabitat = "1"
-            "Mixed forests" -> userHabitat = "2"
-            "Grassland" ->userHabitat = "3"
-            "Deciduous forests" ->userHabitat = "4"
-            else -> false
-        }
-        val answerList = mutableListOf<String>()
-
-        // Add elements to the list
-        println("What is the name of the mushroom?")
-        answerList.add(readln())
-        println("How big is the mushroom?")
-        answerList.add(readln())
-        println("What shape is the cap of the mushroom?")
-        answerList.add(readln())
-        println("What pattern do the spores have?")
-        answerList.add(readln())
-        println("What smell does the mushroom have?")
-        answerList.add(readln())
-        println("How poisonous is the mushroom?")
-        answerList.add(readln())
-        println("What shape does the stem have?")
-        answerList.add(readln())
-        println("Is there a lamellaa present?")
-        answerList.add(readln())
-
-        val prompt =
-            "INSERT INTO `mushrooms` (`id`, `name`, `hat_shape`, `spore_patern`, `odor`, `toxicity_level`, `size`, `stem_shape`, `lamellae_presence`, `habitat_id`, `statistic`) VALUES (NULL, '${answerList[0]}', '${answerList[1]}', '${answerList[2]}', '${answerList[3]}', '${answerList[4]}', '${answerList[5]}', '${answerList[6]}', '${answerList[7]}', '${userHabitat}', '0')"
-        sqlList.add(prompt)
-    }
-    println("What is the growth period?")
-    useranswer = readln()
+    println("What is the growth period? Winter, Spring, Summer, Autumn")
+    validInput = false
     var userGrowthPeriod = ""
-    when (useranswer) {
-        "Winter" -> userGrowthPeriod = "1"
-        "Spring" -> userGrowthPeriod = "2"
-        "Summer" ->userGrowthPeriod = "3"
-        "Autumn" ->userGrowthPeriod = "4"
-        else -> false
+    while(!validInput){
+   var answer = readln()
+    when (answer) {
+        "Winter" ->{
+            userGrowthPeriod = "1"
+            validInput = true
+        }
+        "Spring" ->{
+            userGrowthPeriod = "2"
+            validInput = true
+        }
+        "Summer" ->{
+        userGrowthPeriod = "3"
+            validInput = true
+        }
+        "Autumn" ->{
+        userGrowthPeriod = "4"
+            validInput = true
+        }
+        else ->{
+            println("Invalid input. Please enter 'Winter','Spring', 'Summer' or 'Autumn'.")
+        }
+    }
     }
     sqlList.add("INSERT INTO `growth_periods_mushrooms` (`id`, `id_mushroom`, `id_growth_period`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userGrowthPeriod}')")
 
-    println("Wil je een nieuwe of een bestaande kleur toeveogen? n/b")
-    var userAnswer = readln()
-    if(userAnswer  == "n"){
-        sqlList.add("INSERT INTO `colors` (`id_color`, `color`) VALUES (NULL, '${userAnswer}')")
-        sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), (SELECT MAX(id_color) FROM colors));")
-    }else if(userAnswer =="b"){
-        println("Choose the color.")
-        userAnswer = readln()
-        var userColor = ""
-        when (userAnswer) {
-            "Orange" -> userColor = "1"
-            "Red" -> userColor = "2"
-            "Brown" -> userColor = "3"
-            "White" -> userColor = "4"
-            "Yellow" -> userColor = "5"
-            else -> false
-        }
-        sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
-    }
+     validInput = false
+    println("Do you want to add a new or an existing color? new/existing")
+    while(!validInput){
+        var answer = readln()
+        when(answer){
+            "new"->{
+                println("Enter the color")
+                answer = readln()
+                sqlList.add("INSERT INTO `habitats` (`id`, `habitat`) VALUES (NULL, '${answer}')")
+                validInput = true
+            }
+            "existing"->{
+                println("Choose between these colors. Red, White, Brown, Orange, Yellow")
+                 validInput = false
+                var userColor = ""
+                while(!validInput){
+                    var userAnswer = readln()
+                    when (userAnswer) {
+                        "Orange" ->{ userColor = "1"
 
+                                    sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
+                            validInput = true
+                        }
+                        "Red" ->{ userColor = "2"
+
+                                    sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
+                            validInput = true
+                        }
+                        "Brown" ->{ userColor = "3"
+
+                                    sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
+                            validInput = true}
+                        "White" ->{ userColor = "4"
+
+                                    sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
+                            validInput = true
+                        }
+                        "Yellow" ->{ userColor = "5"
+                                    sqlList.add("INSERT INTO `color_mushrooms` (`id`, `id_mushroom`, `Id_color`) VALUES (NULL, (SELECT MAX(id) FROM mushrooms), '${userColor}')")
+                            validInput = true
+                        }
+                        else -> {
+                            println("Try again! You have made a typo.")
+                        }
+                    }
+                }
+            }else ->{
+            println("Try again! You have made a typo.")
+            }
+        }
+    }
     val updateStatement = connection.createStatement()
     for(element in sqlList){
         updateStatement.executeUpdate(element)
     }
+    println("The mushroom was added.")
     main()
 }
